@@ -85,3 +85,20 @@ export const agentApi = {
     await apiClient.delete(`/agents/${id}`);
   },
 };
+
+export const userApi = {
+  login: async (address: string) => {
+    try {
+      const response = await apiClient.post("/auth/login", {
+        address,
+      });
+
+      console.log("Login request:");
+      console.log("Login response:", response.data);
+
+      return response.data;
+    } catch (error) {
+      throw new Error("Login failed");
+    }
+  },
+};
