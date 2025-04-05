@@ -2,8 +2,7 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { marketplaceApi } from "@/app/services/api";
-import type { Agent } from "@/app/api";
+import { marketplaceApi, Agent } from "@/app/services/api";
 import Link from "next/link";
 
 export default function Marketplace() {

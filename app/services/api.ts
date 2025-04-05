@@ -1,13 +1,47 @@
 import axios from "axios";
-import type { Agent, AgentDetail } from "@/app/api";
 
-// 클라이언트 API 경로
-const API_URL = "/api";
+// API 응답 타입 정의
+export interface Agent {
+  agent_id: string;
+  agent_name: string;
+  agent_description: string;
+  icon: string;
+  install_count: number;
+}
 
+export interface AgentDetail {
+  _id: string;
+  name: string;
+  description: string;
+  icon: string;
+  required_tools: Tool[];
+  required_mcps: any[];
+  version: string;
+  author: string;
+  is_active: boolean;
+  install_count: number;
+  tools: any[];
+  mcps: any[];
+}
+
+export interface Tool {
+  name: string;
+  description: string;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+// 서버 API 엔드포인트 설정 - 클라이언트에서 직접 호출
+const API_BASE_URL = "https://hibolt-server.memetus.store/api";
+
+// 외부 API를 직접 호출하는 인스턴스 생성
 const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: API_BASE_URL,
 });
 
+// 클라이언트 API 함수들 - 외부 API 직접 호출
 export const marketplaceApi = {
   // 모든 에이전트 목록 가져오기
   getAgents: async (): Promise<Agent[]> => {

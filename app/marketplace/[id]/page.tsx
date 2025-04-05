@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { marketplaceApi } from "@/app/services/api";
-import type { AgentDetail } from "@/app/api";
+import type { AgentDetail } from "@/app/services/api";
 import { useParams } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
