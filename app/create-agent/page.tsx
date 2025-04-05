@@ -188,8 +188,8 @@ export default function CreateAgentPage() {
           <div className="mt-10">
             <h2 className="text-xl font-bold text-white mb-6">PROMPTS</h2>
             {selectedTemplate ? (
-              <div>
-                <div className="flex items-center gap-3 mb-5">
+              <div className="bg-white/10 border border-white/10 rounded-md p-8 mt-2">
+                <div className="flex items-center gap-3 mb-5 ">
                   {selectedAgent && (
                     <>
                       <Image
@@ -205,12 +205,12 @@ export default function CreateAgentPage() {
                     </>
                   )}
                 </div>
-                <div className="bg-[#111] border border-white/10 rounded-md mt-2">
+                <div className=" border-white/10 rounded-md mt-2">
                   <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder={`How do you want this agent to invest...`}
-                    className="w-full h-32 bg-transparent text-white p-4 focus:outline-none resize-none"
+                    className="w-full h-44 bg-black text-white p-4 focus:outline-none resize-none rounded-md"
                   />
                 </div>
               </div>

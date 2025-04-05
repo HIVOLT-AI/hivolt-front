@@ -5,31 +5,30 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { agentApi, MyAgent } from "@/app/services/api";
+import MyAgentSkeleton from "@/app/components/skeletons/MyAgentSkeleton";
 
 export default function MyAgentsPage() {
   const router = useRouter();
 
-  // API에서 내 에이전트 목록 가져오기
   const { data: myAgents = [], isLoading } = useQuery<MyAgent[]>({
     queryKey: ["myAgents"],
     queryFn: agentApi.getMyAgents,
   });
 
-  // 에이전트 디테일 페이지로 이동하는 함수
   const handleAgentClick = (agentId: string, agentName: string) => {
     router.push(`/my-agents/${agentId}?name=${encodeURIComponent(agentName)}`);
   };
 
-  // 현재 시간 포맷팅
   const formatCurrentTime = () => {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, "0");
     const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const year = now.getFullYear();
 
-    return `${hours}:${minutes} ${day}/${month}/${year}`;
+    return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
   };
 
   // API 데이터를 UI 표시용 데이터로 변환
@@ -57,13 +56,11 @@ export default function MyAgentsPage() {
     icon: agent.icon,
   }));
 
-  // 데이터가 없을 경우 표시할 빈 상태
   if (!isLoading && agentsForDisplay.length === 0) {
     return (
       <div className="h-[calc(100vh-100px)] bg-transparent px-6 py-8 overflow-hidden">
-        <h1 className="text-4xl font-bold text-white mb-8">MY AGENTS</h1>
+        <h1 className="text-4xl font-bold text-white">MY AGENTS</h1>
         <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-          <p className="text-white text-xl mb-6">에이전트가 없습니다.</p>
           <button
             onClick={() => router.push("/create-agent")}
             className="rounded-full bg-white px-8 py-3 font-bold text-black hover:bg-opacity-90"
@@ -80,16 +77,16 @@ export default function MyAgentsPage() {
       <h1 className="text-4xl font-bold text-white mb-8">MY AGENTS</h1>
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-          <p className="text-white">로딩 중...</p>
+        <div className="w-full h-[calc(100vh-200px)]">
+          <MyAgentSkeleton />
         </div>
       ) : (
         <div className="w-full h-[calc(100vh-200px)]">
           <div className="border border-white rounded-lg mb-3 bg-transparent h-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="text-left bg-white">
-                  <th className="py-4 px-5 font-medium text-black w-1/7">
+                <tr className="text-left bg-white rounded-lg overflow-hidden">
+                  <th className="py-4 px-5 font-medium text-black w-1/7 first:rounded-tl-lg">
                     Agent
                   </th>
                   <th className="py-4 px-5 font-medium text-black w-1/7">
@@ -143,19 +140,21 @@ export default function MyAgentsPage() {
                   <th className="py-4 px-5 font-medium text-black w-1/7">
                     Status
                   </th>
-                  <th className="py-4 px-5 font-medium text-black w-1/7">
+                  <th className="py-4 px-5 font-medium text-black w-1/7 last:rounded-tr-lg">
                     Action
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {agentsForDisplay.map((agent) => (
+                {agentsForDisplay.map((agent, index) => (
                   <tr
                     key={agent.id}
-                    className="border-t border-white cursor-pointer hover:bg-white/10"
+                    className={`border-t border-white cursor-pointer hover:bg-white/10 ${index === agentsForDisplay.length - 1 ? "last:rounded-b-lg" : ""}`}
                     onClick={() => handleAgentClick(agent.id, agent.name)}
                   >
-                    <td className="py-5 px-5 text-white font-bold">
+                    <td
+                      className={`py-5 px-5 text-white font-bold truncate ${index === agentsForDisplay.length - 1 ? "first:rounded-bl-lg" : ""}`}
+                    >
                       {agent.name}
                     </td>
                     <td className="py-5 px-5 text-white">{agent.nav}</td>
@@ -182,7 +181,7 @@ export default function MyAgentsPage() {
                       </div>
                     </td>
                     <td
-                      className="py-5 px-5"
+                      className={`py-5 px-5 ${index === agentsForDisplay.length - 1 ? "last:rounded-br-lg" : ""}`}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex justify-between items-center w-[280px]">

@@ -10,6 +10,7 @@ import {
   TransactionLog,
 } from "@/app/services/api";
 import { useQuery } from "@tanstack/react-query";
+import AgentDetailSkeleton from "@/app/components/skeletons/AgentDetailSkeleton";
 
 export default function AgentDetailPage() {
   const params = useParams();
@@ -17,10 +18,11 @@ export default function AgentDetailPage() {
   const searchParams = useSearchParams();
   const agentName = searchParams.get("name") || "Agent";
 
-  const { data: agentDetailResponse } = useQuery<AgentDetailResponse>({
-    queryKey: ["agent", agentId],
-    queryFn: () => agentApi.getAgentById(agentId),
-  });
+  const { data: agentDetailResponse, isLoading } =
+    useQuery<AgentDetailResponse>({
+      queryKey: ["agent", agentId],
+      queryFn: () => agentApi.getAgentById(agentId),
+    });
 
   const [agentStatus, setAgentStatus] = useState<"LIVE" | "PAUSED">("LIVE");
 
@@ -124,6 +126,10 @@ export default function AgentDetailPage() {
     }
   };
 
+  if (isLoading) {
+    return <AgentDetailSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-transparent text-white px-6 py-8">
       <div className="flex items-center mb-10">
@@ -143,7 +149,7 @@ export default function AgentDetailPage() {
       </div>
       <div className="mb-10">
         <h3 className="text-md text-white uppercase mb-3 font-bold">PROMPTS</h3>
-        <div className="p-4 rounded bg-white/10">
+        <div className="p-4 rounded-xl bg-white/10">
           <div className="flex items-center">
             <Image
               src={agentInfo.icon || "/default-agent-icon.png"}
