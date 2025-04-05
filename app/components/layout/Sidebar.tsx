@@ -24,7 +24,7 @@ const Sidebar = () => {
     },
     {
       name: "My Agents",
-      href: "/agents",
+      href: "/my-agents",
       icon: (
         <Image src="/my_agents.svg" width={24} height={24} alt="My Agents" />
       ),

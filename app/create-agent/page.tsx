@@ -20,7 +20,7 @@ export default function CreateAgentPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { publicKey } = useConnect();
 
