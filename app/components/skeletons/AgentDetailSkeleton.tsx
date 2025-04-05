@@ -64,7 +64,7 @@ const InstallationSectionSkeleton = () => (
 // Complete Agent Detail Skeleton
 export default function AgentDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-transparent px-8 py-6 relative">
+    <div className="min-h-screen bg-transparent relative">
       <AgentHeaderSkeleton />
 
       <div className="flex flex-col md:flex-row gap-8">

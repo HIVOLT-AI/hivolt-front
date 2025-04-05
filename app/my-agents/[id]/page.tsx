@@ -10,7 +10,7 @@ import {
   TransactionLog,
 } from "@/app/services/api";
 import { useQuery } from "@tanstack/react-query";
-import AgentDetailSkeleton from "@/app/components/skeletons/AgentDetailSkeleton";
+import MyAgentDetailSkeleton from "@/app/components/skeletons/MyAgentDetailSkeleton";
 
 export default function AgentDetailPage() {
   const params = useParams();
@@ -127,7 +127,7 @@ export default function AgentDetailPage() {
   };
 
   if (isLoading) {
-    return <AgentDetailSkeleton />;
+    return <MyAgentDetailSkeleton />;
   }
 
   return (
