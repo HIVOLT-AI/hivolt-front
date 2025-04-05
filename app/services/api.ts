@@ -9,8 +9,44 @@ export interface Agent {
   install_count: number;
 }
 
-export interface AgentDetail {
+export interface MyAgent {
   _id: string;
+  name: string;
+  address: string;
+  owner_id: string;
+  agent_id: string;
+  nav: number;
+  realized_pnl: number;
+  unrealized_pnl: number;
+  total_pnl_percentage: number;
+  status: string;
+  tools: unknown[];
+  mcps: unknown[];
+  prompts: string;
+  icon: string;
+  fund_amount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TransactionLog {
+  _id: string;
+  user_agent_id: string;
+  tool_id: string;
+  tool_name: string;
+  log: string;
+  owner_id: string;
+  solscan_url: string;
+  tx_hash: string;
+  date: string;
+}
+
+export interface AgentDetailResponse {
+  user_agent: MyAgent;
+  transaction_logs: TransactionLog[];
+}
+
+export interface AgentDetail {
   name: string;
   description: string;
   icon: string;
@@ -96,6 +132,18 @@ export const agentApi = {
   // 사용자 에이전트 목록 가져오기
   getUserAgents: async (address: string): Promise<Agent[]> => {
     const response = await apiClient.get<Agent[]>(`/agents?address=${address}`);
+    return response.data;
+  },
+
+  // 내 에이전트 목록 가져오기
+  getMyAgents: async (): Promise<MyAgent[]> => {
+    const response = await apiClient.get<MyAgent[]>("/agents");
+    return response.data;
+  },
+
+  // 특정 에이전트 상세 정보 가져오기
+  getAgentById: async (id: string): Promise<AgentDetailResponse> => {
+    const response = await apiClient.get<AgentDetailResponse>(`/agents/${id}`);
     return response.data;
   },
 

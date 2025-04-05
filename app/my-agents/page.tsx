@@ -3,9 +3,17 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { agentApi, MyAgent } from "@/app/services/api";
 
 export default function MyAgentsPage() {
   const router = useRouter();
+
+  // API에서 내 에이전트 목록 가져오기
+  const { data: myAgents = [], isLoading } = useQuery<MyAgent[]>({
+    queryKey: ["myAgents"],
+    queryFn: agentApi.getMyAgents,
+  });
 
   // 에이전트 디테일 페이지로 이동하는 함수
   const handleAgentClick = (agentId: string, agentName: string) => {
@@ -14,168 +22,200 @@ export default function MyAgentsPage() {
 
   // 현재 시간 포맷팅
   const formatCurrentTime = () => {
-    return "23:00 23/01/2025";
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const year = now.getFullYear();
+
+    return `${hours}:${minutes} ${day}/${month}/${year}`;
   };
 
-  // 데모 데이터 - 실제 구현에서는 API에서 받아온 데이터로 대체
-  const demoAgents = [
-    {
-      id: "1",
-      name: "SANCTUM OPTIMIZER",
-      nav: "$425.1K",
-      realized: "+$12.2K",
-      unrealized: "+$12.2K",
-      totalPnl: "+13%",
-      status: "Live",
-      statusColor: "bg-green-900 text-green-500",
-    },
-    {
-      id: "2",
-      name: "WORMHOLE MULTICHAIN SEEKER",
-      nav: "$425.1K",
-      realized: "+$12.2K",
-      unrealized: "-$12.2K",
-      totalPnl: "+13%",
-      status: "Paused",
-      statusColor: "bg-red-900 text-red-500",
-    },
-  ];
+  // API 데이터를 UI 표시용 데이터로 변환
+  const agentsForDisplay = myAgents.map((agent) => ({
+    id: agent._id || agent.agent_id,
+    name: agent.name,
+    nav: `$${agent.nav.toFixed(1)}K`,
+    realized:
+      agent.realized_pnl >= 0
+        ? `+$${agent.realized_pnl.toFixed(1)}K`
+        : `-$${Math.abs(agent.realized_pnl).toFixed(1)}K`,
+    unrealized:
+      agent.unrealized_pnl >= 0
+        ? `+$${agent.unrealized_pnl.toFixed(1)}K`
+        : `-$${Math.abs(agent.unrealized_pnl).toFixed(1)}K`,
+    totalPnl:
+      agent.total_pnl_percentage >= 0
+        ? `+${agent.total_pnl_percentage}%`
+        : `-${Math.abs(agent.total_pnl_percentage)}%`,
+    status: agent.status === "live" ? "Live" : "Paused",
+    statusColor:
+      agent.status === "live"
+        ? "bg-green-900 text-green-500"
+        : "bg-red-900 text-red-500",
+    icon: agent.icon,
+  }));
+
+  // 데이터가 없을 경우 표시할 빈 상태
+  if (!isLoading && agentsForDisplay.length === 0) {
+    return (
+      <div className="h-[calc(100vh-100px)] bg-transparent px-6 py-8 overflow-hidden">
+        <h1 className="text-4xl font-bold text-white mb-8">MY AGENTS</h1>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+          <p className="text-white text-xl mb-6">에이전트가 없습니다.</p>
+          <button
+            onClick={() => router.push("/create-agent")}
+            className="rounded-full bg-white px-8 py-3 font-bold text-black hover:bg-opacity-90"
+          >
+            CREATE AN AGENT
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[calc(100vh-100px)] bg-transparent px-6 py-8 overflow-hidden">
       <h1 className="text-4xl font-bold text-white mb-8">MY AGENTS</h1>
 
-      <div className="w-full h-[calc(100vh-200px)]">
-        <div className="border border-white rounded-lg mb-3 bg-transparent h-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="text-left bg-white">
-                <th className="py-4 px-5 font-medium text-black w-1/7">
-                  Agent
-                </th>
-                <th className="py-4 px-5 font-medium text-black w-1/7">
-                  <div className="flex items-center">
-                    <span>NAV</span>
-                    <Image
-                      src="/up_down.svg"
-                      width={11}
-                      height={17}
-                      alt="Sort"
-                      className="ml-0.5"
-                    />
-                  </div>
-                </th>
-                <th className="py-4 px-5 font-medium text-black w-1/7">
-                  <div className="flex items-center">
-                    <span>Realized</span>
-                    <Image
-                      src="/up_down.svg"
-                      width={11}
-                      height={17}
-                      alt="Sort"
-                      className="ml-0.5"
-                    />
-                  </div>
-                </th>
-                <th className="py-4 px-5 font-medium text-black w-1/7">
-                  <div className="flex items-center">
-                    <span>Unrealized</span>
-                    <Image
-                      src="/up_down.svg"
-                      width={11}
-                      height={17}
-                      alt="Sort"
-                      className="ml-0.5"
-                    />
-                  </div>
-                </th>
-                <th className="py-4 px-5 font-medium text-black w-1/7">
-                  <div className="flex items-center">
-                    <span>Total PnL</span>
-                    <Image
-                      src="/up_down.svg"
-                      width={11}
-                      height={17}
-                      alt="Sort"
-                      className="ml-0.5"
-                    />
-                  </div>
-                </th>
-                <th className="py-4 px-5 font-medium text-black w-1/7">
-                  Status
-                </th>
-                <th className="py-4 px-5 font-medium text-black w-1/7">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {demoAgents.map((agent) => (
-                <tr
-                  key={agent.id}
-                  className="border-t border-white cursor-pointer hover:bg-white/10"
-                  onClick={() => handleAgentClick(agent.id, agent.name)}
-                >
-                  <td className="py-5 px-5 text-white font-bold">
-                    {agent.name}
-                  </td>
-                  <td className="py-5 px-5 text-white">{agent.nav}</td>
-                  <td
-                    className={`py-5 px-5 ${agent.realized.startsWith("+") ? "text-green-500" : "text-red-500"}`}
-                  >
-                    {agent.realized}
-                  </td>
-                  <td
-                    className={`py-5 px-5 ${agent.unrealized.startsWith("+") ? "text-green-500" : "text-red-500"}`}
-                  >
-                    {agent.unrealized}
-                  </td>
-                  <td
-                    className={`py-5 px-5 ${agent.totalPnl.startsWith("+") ? "text-green-500" : "text-red-500"}`}
-                  >
-                    {agent.totalPnl}
-                  </td>
-                  <td className="py-5 px-5">
-                    <div
-                      className={`px-3 py-1 rounded text-sm font-medium inline-block ${agent.statusColor}`}
-                    >
-                      {agent.status}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+          <p className="text-white">로딩 중...</p>
+        </div>
+      ) : (
+        <div className="w-full h-[calc(100vh-200px)]">
+          <div className="border border-white rounded-lg mb-3 bg-transparent h-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="text-left bg-white">
+                  <th className="py-4 px-5 font-medium text-black w-1/7">
+                    Agent
+                  </th>
+                  <th className="py-4 px-5 font-medium text-black w-1/7">
+                    <div className="flex items-center">
+                      <span>NAV</span>
+                      <Image
+                        src="/up_down.svg"
+                        width={11}
+                        height={17}
+                        alt="Sort"
+                        className="ml-0.5"
+                      />
                     </div>
-                  </td>
-                  <td
-                    className="py-5 px-5"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex justify-between items-center w-[280px]">
-                      {agent.status === "Live" ? (
-                        <button className="flex items-center justify-center w-16 h-10 rounded-full bg-[#990000]">
-                          <div className="flex items-center justify-center space-x-1.5">
-                            <div className="w-1.5 h-6 bg-red-500 rounded-sm"></div>
-                            <div className="w-1.5 h-6 bg-red-500 rounded-sm"></div>
-                          </div>
-                        </button>
-                      ) : (
-                        <button className="flex items-center justify-center w-16 h-10 rounded-full bg-[#006633] ">
-                          <div className="w-0 h-0 ml-1 border-y-[8px] border-y-transparent border-l-[16px] border-l-green-500"></div>
-                        </button>
-                      )}
-                      <button className="px-6 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
-                        + fund
-                      </button>
-                      <button className="px-6 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
-                        - fund
-                      </button>
+                  </th>
+                  <th className="py-4 px-5 font-medium text-black w-1/7">
+                    <div className="flex items-center">
+                      <span>Realized</span>
+                      <Image
+                        src="/up_down.svg"
+                        width={11}
+                        height={17}
+                        alt="Sort"
+                        className="ml-0.5"
+                      />
                     </div>
-                  </td>
+                  </th>
+                  <th className="py-4 px-5 font-medium text-black w-1/7">
+                    <div className="flex items-center">
+                      <span>Unrealized</span>
+                      <Image
+                        src="/up_down.svg"
+                        width={11}
+                        height={17}
+                        alt="Sort"
+                        className="ml-0.5"
+                      />
+                    </div>
+                  </th>
+                  <th className="py-4 px-5 font-medium text-black w-1/7">
+                    <div className="flex items-center">
+                      <span>Total PnL</span>
+                      <Image
+                        src="/up_down.svg"
+                        width={11}
+                        height={17}
+                        alt="Sort"
+                        className="ml-0.5"
+                      />
+                    </div>
+                  </th>
+                  <th className="py-4 px-5 font-medium text-black w-1/7">
+                    Status
+                  </th>
+                  <th className="py-4 px-5 font-medium text-black w-1/7">
+                    Action
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {agentsForDisplay.map((agent) => (
+                  <tr
+                    key={agent.id}
+                    className="border-t border-white cursor-pointer hover:bg-white/10"
+                    onClick={() => handleAgentClick(agent.id, agent.name)}
+                  >
+                    <td className="py-5 px-5 text-white font-bold">
+                      {agent.name}
+                    </td>
+                    <td className="py-5 px-5 text-white">{agent.nav}</td>
+                    <td
+                      className={`py-5 px-5 ${agent.realized.startsWith("+") ? "text-green-500" : "text-red-500"}`}
+                    >
+                      {agent.realized}
+                    </td>
+                    <td
+                      className={`py-5 px-5 ${agent.unrealized.startsWith("+") ? "text-green-500" : "text-red-500"}`}
+                    >
+                      {agent.unrealized}
+                    </td>
+                    <td
+                      className={`py-5 px-5 ${agent.totalPnl.startsWith("+") ? "text-green-500" : "text-red-500"}`}
+                    >
+                      {agent.totalPnl}
+                    </td>
+                    <td className="py-5 px-5">
+                      <div
+                        className={`px-3 py-1 rounded text-sm font-medium inline-block ${agent.statusColor}`}
+                      >
+                        {agent.status}
+                      </div>
+                    </td>
+                    <td
+                      className="py-5 px-5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex justify-between items-center w-[280px]">
+                        {agent.status === "Live" ? (
+                          <button className="flex items-center justify-center w-16 h-10 rounded-full bg-[#990000]">
+                            <div className="flex items-center justify-center space-x-1.5">
+                              <div className="w-1.5 h-6 bg-red-500 rounded-sm"></div>
+                              <div className="w-1.5 h-6 bg-red-500 rounded-sm"></div>
+                            </div>
+                          </button>
+                        ) : (
+                          <button className="flex items-center justify-center w-16 h-10 rounded-full bg-[#006633] ">
+                            <div className="w-0 h-0 ml-1 border-y-[8px] border-y-transparent border-l-[16px] border-l-green-500"></div>
+                          </button>
+                        )}
+                        <button className="px-6 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+                          + fund
+                        </button>
+                        <button className="px-6 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+                          - fund
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="text-right text-[#999999] text-xs">
+            updates every 1 hour / last updated {formatCurrentTime()}
+          </div>
         </div>
-        <div className="text-right text-[#999999] text-xs">
-          updates every 1 hour / last updated {formatCurrentTime()}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

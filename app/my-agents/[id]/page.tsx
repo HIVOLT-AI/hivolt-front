@@ -1,64 +1,81 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
+import {
+  agentApi,
+  AgentDetailResponse,
+  TransactionLog,
+} from "@/app/services/api";
+import { useQuery } from "@tanstack/react-query";
 
-export default function AgentDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function AgentDetailPage() {
+  const params = useParams();
+  const agentId = params.id as string;
   const searchParams = useSearchParams();
-  const agentName = searchParams.get("name") || "SANCTUM OPTIMIZER";
+  const agentName = searchParams.get("name") || "Agent";
 
-  // 에이전트 상태 관리
+  const { data: agentDetailResponse } = useQuery<AgentDetailResponse>({
+    queryKey: ["agent", agentId],
+    queryFn: () => agentApi.getAgentById(agentId),
+  });
+
   const [agentStatus, setAgentStatus] = useState<"LIVE" | "PAUSED">("LIVE");
 
-  // 페이지네이션 상태 관리
+  useEffect(() => {
+    if (agentDetailResponse?.user_agent) {
+      setAgentStatus(
+        agentDetailResponse.user_agent.status === "live" ? "LIVE" : "PAUSED"
+      );
+    }
+  }, [agentDetailResponse]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // 데모 에이전트 정보
-  const agentInfo = {
-    id: params.id,
-    name: agentName,
-    nav: "$425.1K",
-    realized: "+$12.3K",
-    unrealized: "+$12.2K",
-    totalPnl: "+13%",
-    status: agentStatus,
-  };
+  const agentInfo = agentDetailResponse?.user_agent
+    ? {
+        id: agentDetailResponse.user_agent._id,
+        name: agentDetailResponse.user_agent.name,
+        icon: agentDetailResponse.user_agent.icon,
+        nav: `$${agentDetailResponse.user_agent.nav.toFixed(1)}K`,
+        realized:
+          agentDetailResponse.user_agent.realized_pnl >= 0
+            ? `+$${agentDetailResponse.user_agent.realized_pnl.toFixed(1)}K`
+            : `-$${Math.abs(agentDetailResponse.user_agent.realized_pnl).toFixed(1)}K`,
+        unrealized:
+          agentDetailResponse.user_agent.unrealized_pnl >= 0
+            ? `+$${agentDetailResponse.user_agent.unrealized_pnl.toFixed(1)}K`
+            : `-$${Math.abs(agentDetailResponse.user_agent.unrealized_pnl).toFixed(1)}K`,
+        totalPnl:
+          agentDetailResponse.user_agent.total_pnl_percentage >= 0
+            ? `+${agentDetailResponse.user_agent.total_pnl_percentage}%`
+            : `-${Math.abs(agentDetailResponse.user_agent.total_pnl_percentage)}%`,
+        status: agentStatus,
+        fundAmount: agentDetailResponse.user_agent.fund_amount,
+        prompts: agentDetailResponse.user_agent.prompts,
+      }
+    : {
+        id: agentId,
+        name: agentName,
+        icon: "",
+        nav: "$0K",
+        realized: "$0K",
+        unrealized: "$0K",
+        totalPnl: "0%",
+        status: agentStatus,
+        fundAmount: 0,
+        prompts: "",
+      };
 
-  // 상태 토글 함수
   const toggleAgentStatus = () => {
     setAgentStatus((prevStatus) => (prevStatus === "LIVE" ? "PAUSED" : "LIVE"));
   };
 
-  // 프롬프트 정보
-  const promptInfo =
-    "I want to replicate part of my funds in Sanctum. Compare price, APY and...";
+  const allTransactions = agentDetailResponse?.transaction_logs || [];
 
-  // 트랜잭션 로그 데이터 - 더 많은 데이터 생성
-  const allTransactions = Array(20)
-    .fill(null)
-    .map((_, index) => ({
-      id: index + 1,
-      tool: `SanctumOptimizeTool_${index + 1}`,
-      log: `Moved funds from IMF to jltsol - Transaction ${index + 1}`,
-      solscan: `https://solscan.io/tx/123456${index}`,
-      time:
-        index < 5
-          ? "1h ago"
-          : index < 10
-            ? "2h ago"
-            : index < 15
-              ? "3h ago"
-              : "4h ago",
-    }));
-
-  // 페이지네이션 처리
   const totalPages = Math.ceil(allTransactions.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -67,7 +84,40 @@ export default function AgentDetailPage({
     indexOfLastItem
   );
 
-  // 페이지 변경 함수
+  const formatDate = (dateString: string) => {
+    try {
+      const match = dateString.match(
+        /(\d{4})-(\d{1,2})-(\d{1,2})T(\d{1,2}):(\d{1,2})/
+      );
+
+      if (match) {
+        const [, year, month, day, hour, minute] = match;
+        const now = new Date();
+        const targetDate = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day),
+          parseInt(hour),
+          parseInt(minute)
+        );
+
+        const diffMs = now.getTime() - targetDate.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+        if (diffHours < 24) {
+          return `${Math.max(1, diffHours)}h ago`;
+        } else {
+          return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+        }
+      }
+
+      return "Recent";
+    } catch (error) {
+      console.error("Date parsing error:", error, dateString);
+      return "Recent";
+    }
+  };
+
   const goToPage = (pageNumber: number) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
@@ -88,19 +138,35 @@ export default function AgentDetailPage({
           <span className="text-2xl">←</span>
         </Link>
       </div>
-      <h2 className="text-5xl font-bold mb-10">{agentInfo.name}</h2>
+      <div className="mb-10">
+        <h2 className="text-5xl font-bold">{agentInfo.name}</h2>
+      </div>
       <div className="mb-10">
         <h3 className="text-md text-white uppercase mb-3 font-bold">PROMPTS</h3>
-        <div className="bg-transparent p-4 rounded border border-gray-800">
-          <div className="flex items-start">
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-3">
-              S
-            </div>
+        <div className="p-4 rounded bg-white/10">
+          <div className="flex items-center">
+            <Image
+              src={agentInfo.icon || "/default-agent-icon.png"}
+              alt="Agent Icon"
+              width={32}
+              height={32}
+              className="rounded-full mr-3"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src = "/default-agent-icon.png";
+              }}
+            />
             <div className="flex-1">
-              <p className="text-gray-300">{promptInfo}</p>
+              <p className="text-gray-300">{agentInfo.prompts}</p>
             </div>
             <button className="text-gray-400 hover:text-white transition-colors">
-              <span>▼</span>
+              <Image
+                src="/chevron_down.svg"
+                alt="Expand"
+                width={24}
+                height={24}
+              />
             </button>
           </div>
         </div>
@@ -111,7 +177,7 @@ export default function AgentDetailPage({
           FUND AMOUNT
         </h3>
         <div className="flex items-center">
-          <span className="text-gray-300 mr-2">10</span>
+          <span className="text-gray-300 mr-2">{agentInfo.fundAmount}</span>
           <span className="text-white">$SOL</span>
         </div>
       </div>
@@ -119,7 +185,7 @@ export default function AgentDetailPage({
       <div className="mb-10">
         <h3 className="text-md text-white uppercase mb-3 font-bold">STATS</h3>
         <div className="overflow-x-auto">
-          <div className="border border-white rounded-lg mb-3 bg-transparent">
+          <div className="border border-white rounded-xl overflow-hidden mb-3 bg-transparent">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="text-left bg-white">
@@ -138,37 +204,16 @@ export default function AgentDetailPage({
                   <th className="py-4 px-5 font-medium text-black w-1/7">
                     <div className="flex items-center">
                       <span>Realized</span>
-                      <Image
-                        src="/up_down.svg"
-                        width={11}
-                        height={17}
-                        alt="Sort"
-                        className="ml-0.5"
-                      />
                     </div>
                   </th>
                   <th className="py-4 px-5 font-medium text-black w-1/7">
                     <div className="flex items-center">
                       <span>Unrealized</span>
-                      <Image
-                        src="/up_down.svg"
-                        width={11}
-                        height={17}
-                        alt="Sort"
-                        className="ml-0.5"
-                      />
                     </div>
                   </th>
                   <th className="py-4 px-5 font-medium text-black w-1/7">
                     <div className="flex items-center">
                       <span>Total PnL</span>
-                      <Image
-                        src="/up_down.svg"
-                        width={11}
-                        height={17}
-                        alt="Sort"
-                        className="ml-0.5"
-                      />
                     </div>
                   </th>
                   <th className="py-4 px-5 font-medium text-black w-1/7">
@@ -224,10 +269,10 @@ export default function AgentDetailPage({
                           <div className="w-0 h-0 ml-1 border-y-[8px] border-y-transparent border-l-[16px] border-l-green-500"></div>
                         </button>
                       )}
-                      <button className="px-4 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+                      <button className="px-6 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
                         + fund
                       </button>
-                      <button className="px-4 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+                      <button className="px-6 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
                         - fund
                       </button>
                     </div>
@@ -278,47 +323,59 @@ export default function AgentDetailPage({
         </div>
 
         <div className="overflow-x-auto">
-          <div className="border border-white rounded-lg mb-3 bg-transparent">
+          <div className="border border-white rounded-xl overflow-hidden mb-3 bg-transparent">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="text-left bg-white">
                   <th className="py-4 px-5 font-medium text-black w-1/4">
                     Tool
                   </th>
-                  <th className="py-4 px-5 font-medium text-black w-1/4">
+                  <th className="py-4 px-5 font-medium text-black w-2/4">
                     Log
                   </th>
-                  <th className="py-4 px-5 font-medium text-black w-1/4">
+                  <th className="py-4 pr-1 pl-3 font-medium text-black w-[60px] text-center">
                     Solscan
                   </th>
-                  <th className="py-4 px-5 font-medium text-black w-1/4">
+                  <th className="py-4 pl-1 pr-3 font-medium text-black w-[70px] text-left">
                     Time
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {currentTransactions.map((tx) => (
-                  <tr key={tx.id} className="border-t border-white">
-                    <td className="py-4 px-5 text-white">{tx.tool}</td>
+                {currentTransactions.map((tx: TransactionLog) => (
+                  <tr key={tx._id} className="border-t border-white">
+                    <td className="py-4 px-5 text-white">{tx.tool_name}</td>
                     <td className="py-4 px-5 text-white">{tx.log}</td>
-                    <td className="py-4 px-5 text-white">
+                    <td className="py-4 pr-1 pl-3 text-white text-center">
                       <Link
-                        href={tx.solscan}
+                        href={tx.solscan_url}
                         target="_blank"
-                        className="text-blue-400 hover:text-blue-300 transition-colors"
+                        className="text-blue-400 hover:text-blue-300 transition-colors inline-flex justify-center"
                       >
                         <Image
                           src="/external_link.svg"
                           width={20}
                           height={20}
                           alt="External Link"
-                          className="inline hover:opacity-80 transition-opacity"
+                          className="hover:opacity-80 transition-opacity"
                         />
                       </Link>
                     </td>
-                    <td className="py-4 px-5 text-white">{tx.time}</td>
+                    <td className="py-4 pl-1 pr-3 text-white text-left whitespace-nowrap">
+                      {formatDate(tx.date)}
+                    </td>
                   </tr>
                 ))}
+                {currentTransactions.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="py-8 px-5 text-center text-gray-400"
+                    >
+                      No transaction logs found
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

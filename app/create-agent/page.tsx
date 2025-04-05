@@ -70,7 +70,6 @@ export default function CreateAgentPage() {
     (savedAgent) => savedAgent.agent_id === selectedTemplate
   );
 
-  // 모달 상태 변화 추적
   useEffect(() => {
     console.log("모달 상태 변경:", showSuccessModal);
   }, [showSuccessModal]);
