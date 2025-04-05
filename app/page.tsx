@@ -75,8 +75,8 @@ export default function Home() {
               <Image
                 src="/main_image.svg"
                 alt="App icons floating in space"
-                width={850}
-                height={850}
+                width={950}
+                height={950}
                 priority
                 className="object-contain"
               />
