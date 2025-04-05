@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -10,10 +10,27 @@ import MyAgentSkeleton from "@/app/components/skeletons/MyAgentSkeleton";
 export default function MyAgentsPage() {
   const router = useRouter();
 
-  const { data: myAgents = [], isLoading } = useQuery<MyAgent[]>({
+  const {
+    data: myAgents = [],
+    isLoading,
+    refetch,
+  } = useQuery<MyAgent[]>({
     queryKey: ["myAgents"],
     queryFn: agentApi.getMyAgents,
   });
+
+  useEffect(() => {
+    refetch();
+
+    const handleFocus = () => {
+      refetch();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [refetch]);
 
   const handleAgentClick = (agentId: string, agentName: string) => {
     router.push(`/my-agents/${agentId}?name=${encodeURIComponent(agentName)}`);

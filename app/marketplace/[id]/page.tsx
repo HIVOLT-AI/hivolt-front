@@ -20,7 +20,7 @@ export default function AgentDetail() {
     queryFn: () => marketplaceApi.getAgentById(id),
   });
 
-  const { data: isSave } = useQuery({
+  const { data: isSave, refetch: refetchSaveStatus } = useQuery({
     queryKey: ["agent", id, publicKey ?? ""],
     queryFn: () => marketplaceApi.getIsSave(id, publicKey?.toBase58()),
   });
@@ -145,24 +145,26 @@ export default function AgentDetail() {
                       FOR TRADERS
                     </h3>
                     <button
-                      className="bg-white text-black px-5 py-3 rounded-full text-sm font-bold flex items-center gap-2 min-w-[150px] justify-center"
+                      className={`${isSave ? "bg-[rgba(53,188,0,0.1)] text-[#35BC00] border border-[#35BC00]" : "bg-white text-black"} px-5 py-3 rounded-full text-sm font-bold flex items-center gap-2 min-w-[150px] justify-center`}
                       onClick={() => {
-                        if (publicKey) {
+                        if (publicKey && !isSave) {
                           const addr = publicKey?.toBase58();
                           console.log(addr);
                           marketplaceApi.saveAgent(id, addr).then((res) => {
                             console.log(res);
+                            refetchSaveStatus();
                           });
                         }
                       }}
+                      disabled={isSave}
                     >
-                      <img
-                        src="/plus_black.svg"
-                        alt="Add"
+                      <Image
+                        src={isSave ? "/check_green.svg" : "/plus_black.svg"}
+                        alt={isSave ? "Added" : "Add"}
                         width={20}
                         height={20}
                       />
-                      ADD AGENT
+                      {isSave ? "ADDED" : "ADD AGENT"}
                     </button>
                   </div>
                   <p className="text-gray-400 text-sm mb-4">

@@ -114,7 +114,7 @@ export const marketplaceApi = {
   },
 
   getIsSave: async (aid: string, uid?: string) => {
-    if (!uid) return null; // uid가 없으면 null 반환
+    if (!uid) return null;
     try {
       const res = await apiClient.post(`/marketplace-agents/${aid}/is-saved`, {
         owner_id: uid,
@@ -123,47 +123,32 @@ export const marketplaceApi = {
       return res.data;
     } catch (error) {
       console.error("Error fetching isSave:", error);
-      return null; // 에러 발생 시 null 반환
+      return null;
     }
   },
 };
 
 export const agentApi = {
-  // 사용자 에이전트 목록 가져오기
-  getUserAgents: async (address: string): Promise<Agent[]> => {
-    const response = await apiClient.get<Agent[]>(`/agents?address=${address}`);
-    return response.data;
-  },
-
-  // 내 에이전트 목록 가져오기
   getMyAgents: async (): Promise<MyAgent[]> => {
     const response = await apiClient.get<MyAgent[]>("/agents");
     return response.data;
   },
 
-  // 특정 에이전트 상세 정보 가져오기
   getAgentById: async (id: string): Promise<AgentDetailResponse> => {
     const response = await apiClient.get<AgentDetailResponse>(`/agents/${id}`);
     return response.data;
   },
 
-  // 저장된 에이전트 목록 가져오기
   getSavedAgents: async (): Promise<Agent[]> => {
     const response = await apiClient.get<Agent[]>(`/saved-agents`);
     return response.data;
   },
 
-  // 새 에이전트 생성하기
   createAgent: async (
     payload: CreateAgentPayload
   ): Promise<{ success: boolean }> => {
     const response = await apiClient.post("/agents", payload);
     return response.data;
-  },
-
-  // 에이전트 삭제하기
-  deleteAgent: async (id: string): Promise<void> => {
-    await apiClient.delete(`/agents/${id}`);
   },
 };
 
