@@ -29,6 +29,13 @@ export default function CreateAgentPage() {
     queryFn: marketplaceApi.getAgents,
   });
 
+  const { data: savedAgents = [] } = useQuery<Agent[]>({
+    queryKey: ["savedAgents"],
+    queryFn: agentApi.getSavedAgents,
+  });
+
+  console.log("savedAgents===>", savedAgents);
+
   const handleSelectTemplate = (agentId: string) => {
     if (selectedTemplate === agentId) {
       setSelectedTemplate(null);
@@ -166,7 +173,7 @@ export default function CreateAgentPage() {
                 <div className="flex items-center gap-3 mb-5">
                   {selectedAgent && (
                     <>
-                      <img
+                      <Image
                         className="rounded-full"
                         src={selectedAgent.icon}
                         alt={selectedAgent.agent_name}

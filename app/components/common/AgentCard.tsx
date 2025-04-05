@@ -45,7 +45,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex items-center gap-3 mb-4">
-        <img
+        <Image
           className="rounded-2xl"
           src={agent.icon}
           alt={agent.agent_name}

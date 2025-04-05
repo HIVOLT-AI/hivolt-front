@@ -9,6 +9,7 @@ const nextConfig = {
       "raydium.io",
       "solana.com",
       "wormhole.com",
+      "hibolt-server.memetus.store",
     ],
   },
 };

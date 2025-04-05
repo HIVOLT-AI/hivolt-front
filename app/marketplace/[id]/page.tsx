@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { marketplaceApi } from "@/app/services/api";
 import type { AgentDetail } from "@/app/services/api";
@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AgentDetailSkeleton from "@/app/components/skeletons/AgentDetailSkeleton";
+import Image from "next/image";
 
 export default function AgentDetail() {
   const params = useParams();
@@ -54,9 +55,9 @@ export default function AgentDetail() {
       ) : (
         <>
           <div className="flex items-center gap-4 mb-8">
-            <img
-              src={agent?.icon}
-              alt={agent?.name}
+            <Image
+              src={agent?.icon || ""}
+              alt={agent?.name || ""}
               width={32}
               height={32}
               className="rounded-full"
@@ -116,7 +117,12 @@ export default function AgentDetail() {
                       onClick={handleCopyLink}
                       className="bg-white text-black px-5 py-3 rounded-full text-sm font-bold flex items-center gap-2 min-w-[150px] justify-center"
                     >
-                      <img src="/copy.svg" alt="Copy" width={20} height={20} />
+                      <Image
+                        src="/copy.svg"
+                        alt="Copy"
+                        width={20}
+                        height={20}
+                      />
                       COPY LINK
                     </button>
                   </div>
@@ -131,7 +137,7 @@ export default function AgentDetail() {
                       FOR TRADERS
                     </h3>
                     <button className="bg-white text-black px-5 py-3 rounded-full text-sm font-bold flex items-center gap-2 min-w-[150px] justify-center">
-                      <img
+                      <Image
                         src="/plus_black.svg"
                         alt="Add"
                         width={20}
@@ -141,8 +147,8 @@ export default function AgentDetail() {
                     </button>
                   </div>
                   <p className="text-gray-400 text-sm mb-4">
-                    Add this agent, go to 'Create an Agent' tab, and prompt how
-                    you want this dapp to trade for you.
+                    Add this agent, go to &apos;Create an Agent&apos; tab, and
+                    prompt how you want this dapp to trade for you.
                   </p>
                 </div>
               </div>
