@@ -1,8 +1,8 @@
-import "@/styles/globals.css";
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import Web3Provider from "@/providers/Web3Provider";
-import QueryProvider from "@/providers/QueryProvider";
+import "@/app/styles/globals.css";
+import Header from "@/app/components/layout/Header";
+import Sidebar from "@/app/components/layout/Sidebar";
+import Web3Provider from "@/app/providers/Web3Provider";
+import QueryProvider from "@/app/providers/QueryProvider";
 
 export const metadata = {
   title: "HOMO MEMETUS",

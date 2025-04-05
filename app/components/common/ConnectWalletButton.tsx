@@ -1,5 +1,5 @@
 "use client";
-import { useConnect } from "@/hooks/useConnect";
+import { useConnect } from "@/app/hooks/useConnect";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import nacl from "tweetnacl";
