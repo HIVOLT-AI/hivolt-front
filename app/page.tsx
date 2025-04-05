@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import ConnectWalletButton from "@/components/common/ConnectWalletButton";
 
 export default function Home() {
   return (
@@ -29,9 +30,7 @@ export default function Home() {
             />
             <h1 className="text-xl font-bold text-white">HOMO MEMETUS</h1>
           </div>
-          <button className="rounded-full bg-white px-8 py-3 font-bold text-black">
-            CONNECT WALLET
-          </button>
+          <ConnectWalletButton />
         </div>
       </header>
 
