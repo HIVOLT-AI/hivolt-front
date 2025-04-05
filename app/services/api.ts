@@ -1,22 +1,25 @@
 import axios from "axios";
+import type { Agent, AgentDetail } from "@/app/api";
 
-export interface Agent {
-  agent_id: string;
-  agent_name: string;
-  agent_description: string;
-  icon: string;
-  install_count: number;
-}
-
+// 클라이언트 API 경로
 const API_URL = "/api";
 
-export const api = axios.create({
+const apiClient = axios.create({
   baseURL: API_URL,
 });
 
 export const marketplaceApi = {
+  // 모든 에이전트 목록 가져오기
   getAgents: async (): Promise<Agent[]> => {
-    const response = await api.get<Agent[]>("/marketplace-agents");
+    const response = await apiClient.get<Agent[]>("/marketplace-agents");
+    return response.data;
+  },
+
+  // 특정 ID의 에이전트 상세 정보 가져오기
+  getAgentById: async (id: string): Promise<AgentDetail> => {
+    const response = await apiClient.get<AgentDetail>(
+      `/marketplace-agents/${id}`
+    );
     return response.data;
   },
 };
