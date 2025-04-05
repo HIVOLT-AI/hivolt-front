@@ -48,6 +48,9 @@ const API_BASE_URL = "https://hibolt-server.memetus.store/api";
 // 외부 API를 직접 호출하는 인스턴스 생성
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  headers: {
+    "x-owner-id": "35KKDFQ2dQ2F8bV7FHT5xzStws1jrZzorC6AAEXQpTNe",
+  },
 });
 
 // 클라이언트 API 함수들 - 외부 API 직접 호출

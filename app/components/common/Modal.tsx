@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 
@@ -22,14 +22,11 @@ const Modal: React.FC<ModalProps> = ({
   emoji = "🎉",
 }) => {
   const router = useRouter();
-  const modalRoot = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // 모달이 마운트될 때 백그라운드에 블러 효과 추가
+  // 컴포넌트가 마운트되었는지 확인
   useEffect(() => {
-    // 모달 루트 요소 생성
-    modalRoot.current = document.createElement("div");
-    modalRoot.current.id = "modal-root";
-    document.body.appendChild(modalRoot.current);
+    setMounted(true);
 
     // 블러 처리는 backdrop 요소에 적용
     const backdrop = document.createElement("div");
@@ -44,11 +41,7 @@ const Modal: React.FC<ModalProps> = ({
     backdrop.style.zIndex = "40";
     document.body.appendChild(backdrop);
 
-    // 컴포넌트가 언마운트될 때 요소들 제거
     return () => {
-      if (modalRoot.current) {
-        document.body.removeChild(modalRoot.current);
-      }
       const backdropElement = document.getElementById("modal-backdrop");
       if (backdropElement) {
         document.body.removeChild(backdropElement);
@@ -100,10 +93,12 @@ const Modal: React.FC<ModalProps> = ({
     </div>
   );
 
-  // Portal을 사용하여 모달을 렌더링
-  return modalRoot.current
-    ? createPortal(modalContent, modalRoot.current)
-    : null;
+  // 클라이언트 사이드에서만 Portal 렌더링
+  if (!mounted) {
+    return null;
+  }
+
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;

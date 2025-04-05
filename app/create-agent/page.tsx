@@ -2,17 +2,26 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  marketplaceApi,
-  Agent,
-  agentApi,
-  CreateAgentPayload,
-} from "@/app/services/api";
+import { Agent, agentApi, CreateAgentPayload } from "@/app/services/api";
 import Image from "next/image";
 import AgentCard from "@/app/components/common/AgentCard";
 import MarketplaceSkeleton from "@/app/components/skeletons/MarketplaceSkeleton";
 import { useConnect } from "@/app/hooks/useConnect";
 import Modal from "../components/common/Modal";
+interface ApiAgentResponse {
+  agent_id?: string;
+  _id?: string;
+  name?: string;
+  agent_name?: string;
+  description?: string;
+  agent_description?: string;
+  icon: string;
+  install_count?: number;
+  status?: string;
+  owner_id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export default function CreateAgentPage() {
   const [agentName, setAgentName] = useState("");
@@ -24,15 +33,18 @@ export default function CreateAgentPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { publicKey } = useConnect();
 
-  const { data: templates = [], isLoading } = useQuery<Agent[]>({
-    queryKey: ["agents"],
-    queryFn: marketplaceApi.getAgents,
-  });
-
-  const { data: savedAgents = [] } = useQuery<Agent[]>({
+  const { data: rawAgents = [], isLoading } = useQuery<ApiAgentResponse[]>({
     queryKey: ["savedAgents"],
     queryFn: agentApi.getSavedAgents,
   });
+
+  const savedAgents: Agent[] = rawAgents.map((agent) => ({
+    agent_id: agent.agent_id || agent._id || "",
+    agent_name: agent.name || agent.agent_name || "",
+    agent_description: agent.description || agent.agent_description || "",
+    icon: agent.icon,
+    install_count: agent.install_count || 0,
+  }));
 
   console.log("savedAgents===>", savedAgents);
 
@@ -54,9 +66,14 @@ export default function CreateAgentPage() {
     setIsEditing(!isEditing);
   };
 
-  const selectedAgent = templates.find(
-    (template) => template.agent_id === selectedTemplate
+  const selectedAgent = savedAgents.find(
+    (savedAgent) => savedAgent.agent_id === selectedTemplate
   );
+
+  // 모달 상태 변화 추적
+  useEffect(() => {
+    console.log("모달 상태 변경:", showSuccessModal);
+  }, [showSuccessModal]);
 
   const handleCreateAgent = async () => {
     if (!agentName || !prompt || !selectedAgent || !publicKey) return;
@@ -73,7 +90,9 @@ export default function CreateAgentPage() {
         icon: selectedAgent.icon,
       };
 
-      await agentApi.createAgent(payload);
+      console.log("에이전트 생성 요청:", payload);
+      const result = await agentApi.createAgent(payload);
+      console.log("에이전트 생성 성공:", result);
       setShowSuccessModal(true);
     } catch (error) {
       console.error("에이전트 생성 실패:", error);
@@ -83,6 +102,7 @@ export default function CreateAgentPage() {
   };
 
   const closeSuccessModal = () => {
+    console.log("모달 닫기");
     setShowSuccessModal(false);
   };
 
@@ -155,12 +175,12 @@ export default function CreateAgentPage() {
             <MarketplaceSkeleton />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {templates.map((template) => (
+              {savedAgents.map((savedAgent) => (
                 <AgentCard
-                  key={template.agent_id}
-                  agent={template}
-                  selected={selectedTemplate === template.agent_id}
-                  onClick={() => handleSelectTemplate(template.agent_id)}
+                  key={savedAgent.agent_id}
+                  agent={savedAgent}
+                  selected={selectedTemplate === savedAgent.agent_id}
+                  onClick={() => handleSelectTemplate(savedAgent.agent_id)}
                 />
               ))}
             </div>
@@ -207,7 +227,7 @@ export default function CreateAgentPage() {
           title="CREATED"
           message={`Your ${agentName} has been successfully deployed!`}
           buttonText="Go to My Agents"
-          buttonLink="/agents"
+          buttonLink="/my-agents"
           onClose={closeSuccessModal}
         />
       )}
