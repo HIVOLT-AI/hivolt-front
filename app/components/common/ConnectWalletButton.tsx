@@ -4,6 +4,10 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import nacl from "tweetnacl";
 import "@solana/wallet-adapter-react-ui/styles.css";
+import { useMutation } from "@tanstack/react-query";
+import { userApi } from "@/app/services/api";
+import { useCallback, useEffect } from "react";
+import { getCookie, setCookie } from "cookies-next";
 
 interface ConnectWalletButtonProps {
   className?: string;
@@ -25,9 +29,8 @@ const ConnectWalletButton = ({
     createSignMessage,
   } = useConnect();
 
-  const handleButtonClick = async () => {
+  const handleButtonClick = useCallback(async () => {
     console.log("Current wallet state:", { connected, wallet, publicKey });
-
     // 이미 연결된 상태에서는 연결 해제
     if (connected) {
       try {
@@ -40,18 +43,16 @@ const ConnectWalletButton = ({
       }
     }
 
-    // connect wallet 함수 구현
     if (!connected) {
-      // 지갑이 연결되지 않은 경우 모달 표시
       setVisible(true);
     } else {
-      // 이미 연결된 경우 서명 로직 실행
       try {
         const message = createSignMessage();
         const encodedMessage = new TextEncoder().encode(message);
 
         if (signMessage && publicKey) {
           try {
+            console.log("check");
             const res = await signMessage(encodedMessage);
 
             if (res) {
@@ -61,11 +62,10 @@ const ConnectWalletButton = ({
                   res,
                   publicKey.toBytes()
                 );
-                console.log("isValid", isValid);
 
-                // 성공 시 콜백 호출
                 if (isValid && onSuccess && publicKey) {
                   onSuccess(publicKey);
+                  userApi.login(publicKey.toBase58());
                 }
               } catch (error) {
                 console.log("서명 검증 오류:", error);
@@ -83,7 +83,45 @@ const ConnectWalletButton = ({
         console.error("Connection error:", error);
       }
     }
-  };
+  }, [
+    connected,
+    wallet,
+    publicKey,
+    connect,
+    disconnect,
+    signMessage,
+    createSignMessage,
+    setVisible,
+    onSuccess,
+  ]);
+
+  useEffect(() => {
+    const addr = getCookie(publicKey?.toBase58() || "");
+    if (addr === "true") return;
+
+    if (connected && publicKey && signMessage) {
+      const message = createSignMessage();
+      const encodedMessage = new TextEncoder().encode(message);
+
+      signMessage(encodedMessage)
+        .then((signature) => {
+          const isValid = nacl.sign.detached.verify(
+            encodedMessage,
+            signature,
+            publicKey.toBytes()
+          );
+          if (isValid && addr !== "true") {
+            userApi.login(publicKey.toBase58()).then((res) => {
+              setCookie(publicKey.toBase58(), "true");
+            });
+          }
+          console.log("서명 검증 결과:", isValid);
+        })
+        .catch((error) => {
+          console.error("서명 오류:", error);
+        });
+    }
+  }, [connected, publicKey, signMessage, onSuccess]);
 
   // 지갑 주소 표시를 위한 함수
   const formatWalletAddress = (address: string) => {
