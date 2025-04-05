@@ -110,8 +110,10 @@ const ConnectWalletButton = ({
             signature,
             publicKey.toBytes()
           );
-          if (isValid && addr !== "true") {
+          if (isValid) {
             userApi.login(publicKey.toBase58()).then((res) => {
+              console.log(res);
+              setCookie("uid", res._id);
               setCookie(publicKey.toBase58(), "true");
             });
           }

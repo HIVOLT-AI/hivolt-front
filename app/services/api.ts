@@ -68,6 +68,28 @@ export const marketplaceApi = {
     );
     return response.data;
   },
+
+  saveAgent: async (aid: string, uid: string) => {
+    const res = await apiClient.post(`/marketplace-agents/${aid}/save`, {
+      owner_id: uid,
+    });
+
+    return res.data;
+  },
+
+  getIsSave: async (aid: string, uid?: string) => {
+    if (!uid) return null; // uid가 없으면 null 반환
+    try {
+      const res = await apiClient.post(`/marketplace-agents/${aid}/is-saved`, {
+        owner_id: uid,
+      });
+
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching isSave:", error);
+      return null; // 에러 발생 시 null 반환
+    }
+  },
 };
 
 export const agentApi = {

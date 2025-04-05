@@ -9,15 +9,23 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AgentDetailSkeleton from "@/app/components/skeletons/AgentDetailSkeleton";
 import Image from "next/image";
+import { useConnect } from "@/app/hooks/useConnect";
 
 export default function AgentDetail() {
   const params = useParams();
+  const { publicKey } = useConnect();
   const id = params.id as string;
-
   const { data: agent, isLoading } = useQuery<AgentDetail>({
     queryKey: ["agent", id],
     queryFn: () => marketplaceApi.getAgentById(id),
   });
+
+  const { data: isSave } = useQuery({
+    queryKey: ["agent", id, publicKey ?? ""],
+    queryFn: () => marketplaceApi.getIsSave(id, publicKey?.toBase58()),
+  });
+
+  console.log("isSave", isSave);
 
   const handleCopyLink = () => {
     const currentUrl = window.location.href;
@@ -136,8 +144,19 @@ export default function AgentDetail() {
                     <h3 className="text-xl text-white font-bold">
                       FOR TRADERS
                     </h3>
-                    <button className="bg-white text-black px-5 py-3 rounded-full text-sm font-bold flex items-center gap-2 min-w-[150px] justify-center">
-                      <Image
+                    <button
+                      className="bg-white text-black px-5 py-3 rounded-full text-sm font-bold flex items-center gap-2 min-w-[150px] justify-center"
+                      onClick={() => {
+                        if (publicKey) {
+                          const addr = publicKey?.toBase58();
+                          console.log(addr);
+                          marketplaceApi.saveAgent(id, addr).then((res) => {
+                            console.log(res);
+                          });
+                        }
+                      }}
+                    >
+                      <img
                         src="/plus_black.svg"
                         alt="Add"
                         width={20}
