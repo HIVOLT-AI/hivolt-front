@@ -33,6 +33,15 @@ export interface Tool {
   __v: number;
 }
 
+export interface CreateAgentPayload {
+  name: string;
+  agent_id: string;
+  owner_id: string;
+  address: string;
+  prompts: string;
+  icon: string;
+}
+
 // 서버 API 엔드포인트 설정 - 클라이언트에서 직접 호출
 const API_BASE_URL = "https://hibolt-server.memetus.store/api";
 
@@ -55,5 +64,24 @@ export const marketplaceApi = {
       `/marketplace-agents/${id}`
     );
     return response.data;
+  },
+};
+
+export const agentApi = {
+  // 사용자 에이전트 목록 가져오기
+  getUserAgents: async (address: string): Promise<Agent[]> => {
+    const response = await apiClient.get<Agent[]>(`/agents?address=${address}`);
+    return response.data;
+  },
+
+  // 새 에이전트 생성하기
+  createAgent: async (payload: CreateAgentPayload): Promise<any> => {
+    const response = await apiClient.post("/agents", payload);
+    return response.data;
+  },
+
+  // 에이전트 삭제하기
+  deleteAgent: async (id: string): Promise<void> => {
+    await apiClient.delete(`/agents/${id}`);
   },
 };
