@@ -15,13 +15,13 @@ export interface AgentDetail {
   description: string;
   icon: string;
   required_tools: Tool[];
-  required_mcps: any[];
+  required_mcps: string[];
   version: string;
   author: string;
   is_active: boolean;
   install_count: number;
-  tools: any[];
-  mcps: any[];
+  tools: Tool[];
+  mcps: string[];
 }
 
 export interface Tool {
@@ -74,8 +74,16 @@ export const agentApi = {
     return response.data;
   },
 
+  // 저장된 에이전트 목록 가져오기
+  getSavedAgents: async (): Promise<Agent[]> => {
+    const response = await apiClient.get<Agent[]>(`/saved-agents`);
+    return response.data;
+  },
+
   // 새 에이전트 생성하기
-  createAgent: async (payload: CreateAgentPayload): Promise<any> => {
+  createAgent: async (
+    payload: CreateAgentPayload
+  ): Promise<{ success: boolean }> => {
     const response = await apiClient.post("/agents", payload);
     return response.data;
   },
@@ -97,7 +105,7 @@ export const userApi = {
       console.log("Login response:", response.data);
 
       return response.data;
-    } catch (error) {
+    } catch {
       throw new Error("Login failed");
     }
   },
